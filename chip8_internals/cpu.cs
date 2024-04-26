@@ -1,8 +1,10 @@
 namespace Moody;
 
-partial class CHIP8
+static partial class CHIP8
 {
-    private class Core
+    private static readonly int VIDEO_WIDTH = 64;
+    private static readonly int VIDEO_HEIGHT = 32;
+    private partial class Core
     {
         public byte[] _memory;
         public byte[] _registers;
@@ -10,10 +12,14 @@ partial class CHIP8
         public uint[] _display;
         private readonly int _row = 32;
         private readonly int _col = 64;
+
+
         public Stack<ushort> _stack;
 
         public ushort _programCounter;
         public ushort _indexRegister;
+
+        public ushort _opCode;
         public byte _delayTimer;
         public byte _soundTimer;
 
@@ -45,7 +51,7 @@ partial class CHIP8
                 _memory[0x50 + i] = fontset[i];
         }
 
-        private static byte GetRandomByte => (byte)Random.Shared.Next(255);
+        private static byte GetRandomByte() => (byte)Random.Shared.Next(255);
 
         public Core()
         {

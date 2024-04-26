@@ -1,6 +1,6 @@
 namespace Moody;
 
-partial class CHIP8
+static partial class CHIP8
 {
     public static ICHIP8System NewSystem()
     {
@@ -22,9 +22,9 @@ partial class CHIP8
             throw new NotImplementedException();
         }
 
-        public void LoadGame(string dir)
+        public void LoadGame(string path)
         {
-            using FileStream fs = new(dir, FileMode.Open, FileAccess.Read);
+            using FileStream fs = new(path, FileMode.Open, FileAccess.Read);
             var size = fs.Length;
 
             var buffer = new byte[size];
@@ -49,7 +49,7 @@ interface ICHIP8System
 
     public void SetKeys();
 
-    public void LoadGame(string dir);
+    public void LoadGame(string path);
 
     bool DrawFlag { get;}
 }
