@@ -221,7 +221,76 @@ static partial class CHIP8
             if(_keypad[key] == 0) _programCounter += 2;
         }
 
-        
+        private void OP_FX07()
+        {
+            var Vx = (_opCode & 0x0F00) >> 8;
 
+            _registers[Vx] = _delayTimer;
+        }
+
+        private void OP_FX0A()
+        {
+            var Vx = (_opCode & 0x0F00) >> 8;
+
+            for(byte i = 0; i < _keypad.Length; i++)
+            {
+                if(_keypad[i] != 0)
+                {
+                    _registers[Vx] = i;
+                    return;
+                }
+            }
+
+            _programCounter -= 2;
+        }
+
+        private void OP_FX15()
+        {
+            var Vx = (_opCode & 0x0F00) >> 8;
+
+            _delayTimer = _registers[Vx];
+        }
+
+        private void OP_FX1E()
+        {
+            var Vx = (_opCode & 0x0F00) >> 8;
+
+            _indexRegister += _registers[Vx];
+        }
+
+        private void OP_FX29()
+        {
+            var digit = _registers[(_opCode & 0x0F00) >> 8];
+            _indexRegister = (ushort)(0x50 + (5 * digit));
+        }
+
+        private void OP_FX33()
+        {
+            var value = _registers[(_opCode & 0x0F00) >> 8];
+
+            _memory[_indexRegister + 2] = (byte)(value % 10);
+            value /= 10;
+
+            _memory[_indexRegister + 1] = (byte)(value % 10);
+            value /= 10;
+
+            _memory[_indexRegister] = (byte)(value % 10);
+        }
+
+        private void OP_FX55()
+        {
+            var Vx = (_opCode & 0x0F00) >> 8;
+
+            for(byte i = 0; i <= Vx; i++)
+                _memory[_indexRegister + i] = _registers[i];
+        }
+
+        private void OP_FX56()
+        {
+            var Vx = (_opCode & 0x0F00) >> 8;
+
+            for(byte i = 0; i <= Vx; i++)
+                _registers[i] = _memory[_indexRegister + i];
+        }
     }
 }
