@@ -23,6 +23,12 @@ static partial class CHIP8
         public byte _delayTimer;
         public byte _soundTimer;
 
+        private readonly Dictionary<byte, Action> _master_table;
+        private readonly Dictionary<byte, Action> _table0;
+        private readonly Dictionary<byte, Action> _table8;
+        private readonly Dictionary<byte, Action> _tableE;
+        private readonly Dictionary<byte, Action> _tableF;
+
         public void InitializeMemory(byte[] buffer)
         {
             for (int i = 0; i < buffer.Length; i++)
@@ -47,7 +53,7 @@ static partial class CHIP8
 	            0xF0, 0x80, 0xF0, 0x80, 0x80  // F
             ];
 
-            for(int i = 0; i < fontset.Length; i++)
+            for (int i = 0; i < fontset.Length; i++)
                 _memory[0x50 + i] = fontset[i];
         }
 
@@ -69,6 +75,88 @@ static partial class CHIP8
             _indexRegister = 0x000;
 
             _stack = new Stack<ushort>(16);
+
+            _master_table = new Dictionary<byte, Action>
+            {
+                { 0x0, Table0 },
+                { 0x1, OP_1NNN },
+                { 0x2, OP_2NNN },
+                { 0x3, OP_3XKK },
+                { 0x4, OP_4XKK },
+                { 0x5, OP_5XY0 },
+                { 0x6, OP_6XKK },
+                { 0x7, OP_7XKK },
+                { 0x8, Table8 },
+                { 0x9, OP_9XY0 },
+                { 0xA, OP_ANNN },
+                { 0xB, OP_BNNN },
+                { 0xC, OP_CXKK },
+                { 0xD, OP_DXYN },
+                { 0xE, TableE },
+                { 0xF, TableF }
+            };
+
+            _table0 = new Dictionary<byte, Action>()
+            {
+                { 0x0, OP_00E0 },
+                { 0xE, OP_00EE }
+            };
+
+            _table8 = new Dictionary<byte, Action>()
+            {
+                { 0x0, OP_8XY0 },
+                { 0x1, OP_8XY1 },
+                { 0x2, OP_8XY2 },
+                { 0x3, OP_8XY3 },
+                { 0x4, OP_8XY4 },
+                { 0x5, OP_8XY5 },
+                { 0x6, OP_8XY6 },
+                { 0x7, OP_8XY7 },
+                { 0xE, OP_8XYE }
+            };
+
+            _tableE = new Dictionary<byte, Action>()
+            {
+                {0x1, OP_EXA1},
+                {0xE, OP_EX9E},
+            };
+
+            _tableF = new Dictionary<byte, Action>()
+            {
+                { 0x07, OP_FX07 },
+                { 0x0A, OP_FX0A },
+                { 0x15, OP_FX15 },
+                { 0x18, OP_FX18 },
+                { 0x1E, OP_FX1E },
+                { 0x29, OP_FX29 },
+                { 0x33, OP_FX33 },
+                { 0x55, OP_FX55 },
+                { 0x65, OP_FX65 }
+        };
+        }
+
+        private void Table0()
+        {
+            if(_table0.TryGetValue((byte)(_opCode & 0x000F), out var func))
+                func();
+        }
+
+        private void Table8()
+        {
+            if(_table8.TryGetValue((byte)(_opCode & 0x000F), out var func))
+                func();
+        }
+
+        private void TableE()
+        {
+            if(_tableE.TryGetValue((byte)(_opCode & 0x000F), out var func))
+                func();
+        }
+
+        private void TableF()
+        {
+            if(_tableF.TryGetValue((byte)(_opCode & 0x00FF), out var func))
+                func();
         }
     }
 }

@@ -251,6 +251,12 @@ static partial class CHIP8
             _delayTimer = _registers[Vx];
         }
 
+        private void OP_FX18()
+        {
+            var Vx = (_opCode & 0x0F00) >> 8;
+            _soundTimer = _registers[Vx];
+        }
+
         private void OP_FX1E()
         {
             var Vx = (_opCode & 0x0F00) >> 8;
@@ -285,7 +291,7 @@ static partial class CHIP8
                 _memory[_indexRegister + i] = _registers[i];
         }
 
-        private void OP_FX56()
+        private void OP_FX65()
         {
             var Vx = (_opCode & 0x0F00) >> 8;
 
