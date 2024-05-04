@@ -1,6 +1,6 @@
 namespace Moody;
 
-static partial class CHIP8
+static public partial class CHIP8
 {
     private partial class Core
     {
@@ -195,13 +195,13 @@ static partial class CHIP8
                 for(byte col = 0; col < 8; col++)
                 {
                     byte curSpritePixel = (byte)(spriteByte & (0x80 >> col));
-                    ref uint curScreenPixel = ref _display[((yPos + row) * VIDEO_WIDTH) + (xPos + col)];
+                    ref ushort curScreenPixel = ref _display[((yPos + row) * VIDEO_WIDTH) + (xPos + col)];
 
-                    if(curSpritePixel == 1)
+                    if(curSpritePixel != 0)
                     {
-                        if(curScreenPixel == 0xFFFFFFFF) _registers[0xF] = 1;
+                        if(curScreenPixel == 0xFFFF) _registers[0xF] = 1;
 
-                        curScreenPixel ^= 0xFFFFFFFF;
+                        curScreenPixel ^= 0xFFFF;
                     }
                 }
             }

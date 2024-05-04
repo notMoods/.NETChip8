@@ -1,19 +1,26 @@
-﻿using Moody;
+﻿using System.Diagnostics;
+using Moody;
 
-var system = CHIP8.NewSystem();
 
-system.Initialize(5);
-
-system.LoadGame("C:\\Users\\HP PAVILION 14\\Documents\\Docs\\Coding_Stuff\\2024 folder\\c#_chip8\roms\\IBM Logo.ch8");
-
-while(true)
+Console.Write("Enter a video scale: ");
+if(!int.TryParse(Console.ReadLine(), out var videoScale))
 {
-    system.EmulateCycle();
-
-    if(system.DrawFlag)
-    {
-
-    }
-
-    system.SetKeys();
+    Console.WriteLine("\nFailed to see scale, using default of 4");
+    videoScale = 4;
 }
+
+Console.Write("Enter a cycle delay: ");
+if(!int.TryParse(Console.ReadLine(), out var cycleDelay))
+{
+    Console.WriteLine("\nFailed to see scale, using default of 2");
+    cycleDelay = 2;
+}
+
+using(var window = new Window(64 * videoScale, 32 * videoScale, "CHIP-8 Emulator"))
+{
+    window.Run();
+
+}
+
+
+

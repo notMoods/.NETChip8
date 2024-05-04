@@ -1,63 +1,30 @@
 namespace Moody;
 
-static partial class CHIP8
+static public partial class CHIP8
 {
-    private static readonly int VIDEO_WIDTH = 64;
-    private static readonly int VIDEO_HEIGHT = 32;
+    public static readonly int VIDEO_WIDTH = 64;
+    public static readonly int VIDEO_HEIGHT = 32;
     private partial class Core
     {
         public byte[] _memory;
         public byte[] _registers;
         public byte[] _keypad;
-        public uint[] _display;
+        public ushort[] _display;
         private readonly int _row = 32;
         private readonly int _col = 64;
-
-
         public Stack<ushort> _stack;
-
         public ushort _programCounter;
         public ushort _indexRegister;
-
         public ushort _opCode;
         public byte _delayTimer;
         public byte _soundTimer;
+        public byte _timerCounter= 0;
 
-        private readonly Dictionary<byte, Action> _master_table;
+        private readonly Action[] _master_table;
         private readonly Dictionary<byte, Action> _table0;
         private readonly Dictionary<byte, Action> _table8;
         private readonly Dictionary<byte, Action> _tableE;
         private readonly Dictionary<byte, Action> _tableF;
-
-        public void InitializeMemory(byte[] buffer)
-        {
-            for (int i = 0; i < buffer.Length; i++)
-                _memory[0x200 + i] = buffer[i];
-
-            byte[] fontset = [
-                0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-	            0x20, 0x60, 0x20, 0x20, 0x70, // 1
-	            0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-	            0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-	            0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-            	0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-             	0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-    	        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-            	0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-	            0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-	            0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-            	0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-            	0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-	            0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-	            0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-	            0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-            ];
-
-            for (int i = 0; i < fontset.Length; i++)
-                _memory[0x50 + i] = fontset[i];
-        }
-
-        private static byte GetRandomByte() => (byte)Random.Shared.Next(255);
 
         public Core()
         {
@@ -69,32 +36,20 @@ static partial class CHIP8
 
             _keypad = new byte[16];
 
-            _display = new uint[_col * _row];
+            _display = new ushort[_col * _row];
 
             _programCounter = 0x200;
             _indexRegister = 0x000;
 
             _stack = new Stack<ushort>(16);
 
-            _master_table = new Dictionary<byte, Action>
-            {
-                { 0x0, Table0 },
-                { 0x1, OP_1NNN },
-                { 0x2, OP_2NNN },
-                { 0x3, OP_3XKK },
-                { 0x4, OP_4XKK },
-                { 0x5, OP_5XY0 },
-                { 0x6, OP_6XKK },
-                { 0x7, OP_7XKK },
-                { 0x8, Table8 },
-                { 0x9, OP_9XY0 },
-                { 0xA, OP_ANNN },
-                { 0xB, OP_BNNN },
-                { 0xC, OP_CXKK },
-                { 0xD, OP_DXYN },
-                { 0xE, TableE },
-                { 0xF, TableF }
-            };
+            _master_table =
+            [
+                Table0, OP_1NNN, OP_2NNN, OP_3XKK,
+                OP_4XKK, OP_5XY0, OP_6XKK, OP_7XKK,
+                Table8, OP_9XY0, OP_ANNN, OP_BNNN,
+                OP_CXKK, OP_DXYN, TableE, TableF 
+            ];
 
             _table0 = new Dictionary<byte, Action>()
             {
@@ -135,28 +90,89 @@ static partial class CHIP8
         };
         }
 
+        private static byte GetRandomByte() => (byte)Random.Shared.Next(255);
+
+        public void InitializeMemory(Span<byte> buffer)
+        {
+            for (int i = 0; i < buffer.Length; i++)
+                _memory[0x200 + i] = buffer[i];
+
+            byte[] fontset = [
+                0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+	            0x20, 0x60, 0x20, 0x20, 0x70, // 1
+	            0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+	            0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+	            0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+            	0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+             	0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+    	        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+            	0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+	            0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+	            0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+            	0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+            	0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+	            0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+	            0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+	            0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+            ];
+
+            for (int i = 0; i < fontset.Length; i++)
+                _memory[0x50 + i] = fontset[i];
+        }
+
         private void Table0()
         {
-            if(_table0.TryGetValue((byte)(_opCode & 0x000F), out var func))
+            if (_table0.TryGetValue((byte)(_opCode & 0x000F), out var func))
                 func();
         }
 
         private void Table8()
         {
-            if(_table8.TryGetValue((byte)(_opCode & 0x000F), out var func))
+            if (_table8.TryGetValue((byte)(_opCode & 0x000F), out var func))
                 func();
         }
 
         private void TableE()
         {
-            if(_tableE.TryGetValue((byte)(_opCode & 0x000F), out var func))
+            if (_tableE.TryGetValue((byte)(_opCode & 0x000F), out var func))
                 func();
         }
 
         private void TableF()
         {
-            if(_tableF.TryGetValue((byte)(_opCode & 0x00FF), out var func))
+            if (_tableF.TryGetValue((byte)(_opCode & 0x00FF), out var func))
                 func();
+        }
+
+        private void UpdateTimers()
+        {
+            //Decrement delay timer if it has been set
+            if(_delayTimer > 0) --_delayTimer;
+
+            //Decrement sound timer if it has been set
+            if(_soundTimer > 0) --_soundTimer;
+        }
+
+        public void Cycle()
+        {
+            //Fetch the opCode
+            _opCode = (ushort)((_memory[_programCounter] << 8) | _memory[_programCounter + 1]);
+
+            Console.WriteLine($"{_programCounter:X4}: {_opCode:X4}");
+
+            //Increment the counter before we execute anything
+            _programCounter += 2;
+
+            //Decode and execute
+            _master_table[(_opCode & 0xF000) >> 12]();
+
+            if(_timerCounter == 10)
+            {
+                UpdateTimers();
+                _timerCounter = 0;
+            }
+
+            _timerCounter++;
         }
     }
 }
