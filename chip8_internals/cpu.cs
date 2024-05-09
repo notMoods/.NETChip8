@@ -6,19 +6,18 @@ static public partial class CHIP8
     public static readonly int VIDEO_HEIGHT = 32;
     private partial class Core
     {
-        public byte[] _memory;
-        public byte[] _registers;
+        private byte[] _memory;
+        private byte[] _registers;
         public byte[] _keypad;
         public ushort[] _display;
         private readonly int _row = 32;
         private readonly int _col = 64;
-        public Stack<ushort> _stack;
-        public ushort _programCounter;
-        public ushort _indexRegister;
-        public ushort _opCode;
+        private Stack<ushort> _stack;
+        private ushort _programCounter;
+        private ushort _indexRegister;
+        private ushort _opCode;
         public byte _delayTimer;
         public byte _soundTimer;
-        public byte _timerCounter= 0;
 
         private readonly Action[] _master_table;
         private readonly Dictionary<byte, Action> _table0;
@@ -166,13 +165,8 @@ static public partial class CHIP8
             //Decode and execute
             _master_table[(_opCode & 0xF000) >> 12]();
 
-            if(_timerCounter == 10)
-            {
-                UpdateTimers();
-                _timerCounter = 0;
-            }
 
-            _timerCounter++;
+            UpdateTimers();
         }
     }
 }

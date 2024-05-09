@@ -1,133 +1,121 @@
-using OpenTK.Graphics.OpenGL;
-using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Desktop;
-using OpenTK.Windowing.GraphicsLibraryFramework;
+using SFML.Graphics;
+using SFML.Window;
 using static Moody.CHIP8;
 
 namespace Moody;
 
-class Window : GameWindow
+class CHIP8Window : RenderWindow
 {
-    int vertexBufferObject;
-    Shader? shader;
-    float[] vertices = [
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f
-    ];
-    private CHIP8System _chip8;
-    public Window(int width, int height, string title, CHIP8System? chip8 = default) : base(GameWindowSettings.Default, new NativeWindowSettings(){ClientSize = (width, height), Title = title})
+    private readonly CHIP8System _chip8;
+    private readonly int _scale;
+    public CHIP8Window(int scale) : base(new VideoMode((uint)(scale * VIDEO_WIDTH), (uint)(scale * VIDEO_HEIGHT)), "Chippy-8")
     {
-        _chip8 = chip8 ?? new CHIP8System();
-        FileDrop += On_FileDrop;
+        _scale = scale;
+        
+        _chip8 = new CHIP8System();
+        KeyPressed += On_KeyPressed;
+        Closed += On_Closed;
     }
 
-    protected override void OnUpdateFrame(FrameEventArgs args)
+    private void On_Closed(object? sender, EventArgs e)
     {
-        base.OnUpdateFrame(args);
+        throw new NotImplementedException();
     }
 
-    protected override void OnUnload()
+    private void On_KeyPressed(object? sender, KeyEventArgs e)
     {
-        base.OnUnload();
-        shader?.Dispose();
-    }
+        if (e.Code == Keyboard.Key.Escape) Close();
 
-    protected override void OnLoad()
-    {
-        base.OnLoad();
-        GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
-        vertexBufferObject = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
-
-        GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
-
-        shader = new Shader("shader.vert", "shader.frag");
-    }
-
-    protected override void OnRenderFrame(FrameEventArgs args)
-    {
-        base.OnRenderFrame(args);
-
-        GL.Clear(ClearBufferMask.ColorBufferBit);
-
-
-        SwapBuffers();
-    }
-
-    protected override void OnFramebufferResize(FramebufferResizeEventArgs e)
-    {
-        base.OnFramebufferResize(e);
-
-        GL.Viewport(0, 0, e.Width, e.Height);
-    }
-
-    private void On_FileDrop(FileDropEventArgs args)
-    {
-        _chip8.LoadGame(args.FileNames[0]);
-    }
-
-    protected override void OnKeyDown(KeyboardKeyEventArgs e)
-    {
-        switch (e.Key)
+        switch (e.Code)
         {
-            case Keys.D1:
+            case Keyboard.Key.Num1:
                 KeySetter(1);
                 break;
-            case Keys.D2:
+            case Keyboard.Key.Num2:
                 KeySetter(2);
                 break;
-            case Keys.D3:
+            case Keyboard.Key.Num3:
                 KeySetter(3);
                 break;
-            case Keys.D4:
+            case Keyboard.Key.Num4:
                 KeySetter(0xC);
                 break;
-            case Keys.Q:
+            case Keyboard.Key.Q:
                 KeySetter(4);
                 break;
-            case Keys.W:
+            case Keyboard.Key.W:
                 KeySetter(5);
                 break;
-            case Keys.E:
+            case Keyboard.Key.E:
                 KeySetter(6);
                 break;
-            case Keys.R:
+            case Keyboard.Key.R:
                 KeySetter(0xD);
                 break;
-            case Keys.A:
+            case Keyboard.Key.A:
                 KeySetter(7);
                 break;
-            case Keys.S:
+            case Keyboard.Key.S:
                 KeySetter(8);
                 break;
-            case Keys.D:
+            case Keyboard.Key.D:
                 KeySetter(9);
                 break;
-            case Keys.F:
+            case Keyboard.Key.F:
                 KeySetter(0xE);
                 break;
-            case Keys.Z:
+            case Keyboard.Key.Z:
                 KeySetter(0xA);
                 break;
-            case Keys.X:
+            case Keyboard.Key.X:
                 KeySetter(0);
                 break;
-            case Keys.C:
+            case Keyboard.Key.C:
                 KeySetter(0xB);
                 break;
-            case Keys.V:
+            case Keyboard.Key.V:
                 KeySetter(0xF);
                 break;
         }
-        
+
+        void KeySetter(int num)
+        {
+            if (num < 0 || num >= _chip8.Keys.Length)
+                return;
+            _chip8.Keys[num] = 0xFF;
+        }
     }
 
-    private void KeySetter(int num)
+    public void MainGameCycle()
     {
-        if (num < 0 || num >= _chip8.Keys.Length)
-            return;
-        _chip8.Keys[num] = 0xFF;
+        Clear();
+        _chip8.Cycle();
+
+        if(_chip8.STimerAboveZero)
+        {
+            //make windows beep here
+        }
+
+        var disp_buffer = _chip8.Display;
+
+        //using disp_buffer, draw the sprites 
+        //to screen
+
+        for(int i = 0; i < disp_buffer.Length; i++)
+        {
+            if(disp_buffer[i] != 0)
+            {
+                var (yCord, xCord) = (i / VIDEO_WIDTH, i - (i / VIDEO_WIDTH * VIDEO_WIDTH));
+
+                var (scaledY, scaledX) = (yCord * _scale, xCord * _scale);
+
+                //the shape to draw is a rectangle pixel 10 x 10
+                //starting from scaledX, scaledY as top left corner
+            }
+        }
+
+        Display();
     }
+
+
 }

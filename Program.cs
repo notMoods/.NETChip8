@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
+using System.Timers;
 using Moody;
+using SFML.Window;
 
 
 // Console.Write("Enter a video scale: ");
@@ -16,11 +18,33 @@ using Moody;
 //     cycleDelay = 2;
 // }
 
-using(var window = new Window(64 * 10, 32 * 10, "CHIP-8 Emulator"))
+internal class Program
 {
-    window.Run();
+    private static void Main(string[] args)
+    {
+        var window = new CHIP8Window(10);
+        window.SetFramerateLimit(60);
 
+
+        void OnTimerElapsed(object? sender, ElapsedEventArgs e)
+        {
+            window.MainGameCycle();
+        }
+
+
+        var timer = new System.Timers.Timer(16);
+        timer.Elapsed += OnTimerElapsed;
+        timer.AutoReset = true;
+        timer.Start();
+
+
+        while (window.IsOpen)
+        {
+            window.DispatchEvents();
+        }
+
+
+        timer.Stop();
+        timer.Dispose();
+    }
 }
-
-
-

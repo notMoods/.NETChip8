@@ -10,6 +10,8 @@ static public partial class CHIP8
 
         public ushort[] Display;
 
+        public bool STimerAboveZero => _core._soundTimer > 0; 
+
         public void Cycle() => _core.Cycle();
 
         public CHIP8System()
