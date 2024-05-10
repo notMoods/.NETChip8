@@ -9,21 +9,26 @@ class CHIP8Window : RenderWindow
     private readonly CHIP8System _chip8;
     private readonly int _scale;
 
+    private bool isGameLoaded;
+
     public bool STimerAboveZero => _chip8.STimerAboveZero;
     public CHIP8Window(int scale) : base(new VideoMode((uint)(scale * VIDEO_WIDTH), (uint)(scale * VIDEO_HEIGHT)), "Chippy-8")
     {
         _scale = scale;
 
         _chip8 = new CHIP8System();
-
-        //find a way to intuitively implement file dropping
-        _chip8.LoadGame("C:\\Users\\HP PAVILION 14\\Documents\\Docs\\Coding_Stuff\\2024 folder\\c#_chip8\\roms\\Pong (1 player).ch8");
+        isGameLoaded = false;
     }
 
-    public void MainGameCycle() => _chip8.Cycle();
+    public void MainGameCycle()
+    {
+        if (!isGameLoaded) return;
+        _chip8.Cycle();
+    }
 
     public void UpdateDisplay()
     {
+        if (!isGameLoaded) return;
         Clear();
         var disp_buffer = _chip8.Display;
 
@@ -35,7 +40,7 @@ class CHIP8Window : RenderWindow
 
                 var (scaledY, scaledX) = (yCord * _scale, xCord * _scale);
 
-                RectangleShape pixel = new(new SFML.System.Vector2f(10, 10))
+                RectangleShape pixel = new(new SFML.System.Vector2f(_scale, _scale))
                 {
                     Position = new(scaledX, scaledY)
                 };
@@ -48,12 +53,41 @@ class CHIP8Window : RenderWindow
 
     public void ProcessKeyPresses()
     {
+        static bool TryGetGamePath(out string path)
+        {
+            var foo = Clipboard.Contents;
+
+            if (foo[^3..] == "ch8")
+            {
+                path = foo;
+                return true;
+            }
+
+            path = "";
+            return false;
+        }
+
+
         if (PollEvent(out Event _event))
         {
             switch (_event.Type)
             {
                 case EventType.Closed:
                     Close();
+                    break;
+                case EventType.MouseButtonReleased:
+                    if (_event.MouseButton.Button == Mouse.Button.Left)
+                    {
+                        if (_event.MouseButton.X >= 0 && _event.MouseButton.X < Size.X
+                        && _event.MouseButton.Y >= 0 && _event.MouseButton.Y < Size.Y)
+                        {
+                            if (TryGetGamePath(out var path))
+                            {
+                                _chip8.LoadGame(path);
+                                isGameLoaded = true;
+                            }
+                        }
+                    }
                     break;
                 case EventType.KeyPressed:
                     switch (_event.Key.Code)
