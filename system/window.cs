@@ -4,21 +4,14 @@ using static Moody.CHIP8;
 
 namespace Moody;
 
-class CHIP8Window : RenderWindow
+class CHIP8Window(int scale) : RenderWindow(new VideoMode((uint)(scale * VIDEO_WIDTH), (uint)(scale * VIDEO_HEIGHT)), "Chippy-8")
 {
-    private readonly CHIP8System _chip8;
-    private readonly int _scale;
+    private readonly CHIP8System _chip8 = new();
+    private readonly int _scale = scale;
 
-    private bool isGameLoaded;
+    private bool isGameLoaded = false;
 
     public bool STimerAboveZero => _chip8.STimerAboveZero;
-    public CHIP8Window(int scale) : base(new VideoMode((uint)(scale * VIDEO_WIDTH), (uint)(scale * VIDEO_HEIGHT)), "Chippy-8")
-    {
-        _scale = scale;
-
-        _chip8 = new CHIP8System();
-        isGameLoaded = false;
-    }
 
     public void MainGameCycle()
     {
@@ -53,21 +46,6 @@ class CHIP8Window : RenderWindow
 
     public void ProcessKeyPresses()
     {
-        static bool TryGetGamePath(out string path)
-        {
-            var foo = Clipboard.Contents;
-
-            if (foo[^3..] == "ch8")
-            {
-                path = foo;
-                return true;
-            }
-
-            path = "";
-            return false;
-        }
-
-
         if (PollEvent(out Event _event))
         {
             switch (_event.Type)
@@ -199,6 +177,20 @@ class CHIP8Window : RenderWindow
                     }
                     break;
             }
+        }
+
+        static bool TryGetGamePath(out string path)
+        {
+            var foo = Clipboard.Contents;
+
+            if (foo[^3..] == "ch8")
+            {
+                path = foo;
+                return true;
+            }
+
+            path = "";
+            return false;
         }
     }
 
