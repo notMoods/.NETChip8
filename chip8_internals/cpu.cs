@@ -157,8 +157,6 @@ static public partial class CHIP8
             //Fetch the opCode
             _opCode = (ushort)((_memory[_programCounter] << 8) | _memory[_programCounter + 1]);
 
-            Console.WriteLine($"{_programCounter:X4}: {_opCode:X4}");
-
             //Increment the counter before we execute anything
             _programCounter += 2;
 

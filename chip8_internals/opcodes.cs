@@ -190,12 +190,12 @@ static public partial class CHIP8
 
             for(uint row = 0; row < height; row++)
             {
-                var spriteByte = _memory[_indexRegister + row];
+                var spriteByte = _memory[(_indexRegister + row) % 4096];
 
                 for(byte col = 0; col < 8; col++)
                 {
                     byte curSpritePixel = (byte)(spriteByte & (0x80 >> col));
-                    ref ushort curScreenPixel = ref _display[((yPos + row) * VIDEO_WIDTH) + (xPos + col)];
+                    ref ushort curScreenPixel = ref _display[(((yPos + row) * VIDEO_WIDTH) + (xPos + col)) % 2048];
 
                     if(curSpritePixel != 0)
                     {

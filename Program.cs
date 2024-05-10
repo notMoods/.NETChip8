@@ -1,22 +1,5 @@
 ﻿using System.Diagnostics;
-using System.Timers;
 using Moody;
-using SFML.Window;
-
-
-// Console.Write("Enter a video scale: ");
-// if(!int.TryParse(Console.ReadLine(), out var videoScale))
-// {
-//     Console.WriteLine("\nFailed to see scale, using default of 4");
-//     videoScale = 4;
-// }
-
-// Console.Write("Enter a cycle delay: ");
-// if(!int.TryParse(Console.ReadLine(), out var cycleDelay))
-// {
-//     Console.WriteLine("\nFailed to see scale, using default of 2");
-//     cycleDelay = 2;
-// }
 
 internal class Program
 {
@@ -26,25 +9,30 @@ internal class Program
         window.SetFramerateLimit(60);
 
 
-        void OnTimerElapsed(object? sender, ElapsedEventArgs e)
-        {
-            window.MainGameCycle();
-        }
-
-
-        var timer = new System.Timers.Timer(16);
-        timer.Elapsed += OnTimerElapsed;
-        timer.AutoReset = true;
-        timer.Start();
-
-
+        var lastCycleTime = Stopwatch.StartNew();
+        float cycleDelay = 16.0f;
+        
         while (window.IsOpen)
         {
-            window.DispatchEvents();
+            window.ProcessKeyPresses();
+                
+            var currentTime = Stopwatch.GetTimestamp();
+            float dt = (float)(currentTime - lastCycleTime.ElapsedTicks) / Stopwatch.Frequency * 1000;
+            
+            if (dt > cycleDelay)
+            {
+                lastCycleTime.Restart();
+
+                window.MainGameCycle();
+                if(window.STimerAboveZero)
+                {
+                    //do beep sound
+                }
+
+                window.UpdateDisplay(); // Update display with emulator's output
+            }
         }
 
-
-        timer.Stop();
-        timer.Dispose();
+        window.Dispose();
     }
 }
